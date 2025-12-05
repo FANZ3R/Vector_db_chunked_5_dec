@@ -1,0 +1,13 @@
+sentence-transformers
+qdrant-client
+python-dotenv
+tqdm
+langchain-text-splitters
+pandas
+numpy
+uuid
+typing
+
+streamlit
+openai
+pathlib

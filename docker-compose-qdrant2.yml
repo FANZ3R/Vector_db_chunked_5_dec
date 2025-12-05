@@ -1,0 +1,17 @@
+version: '3.4'
+services:
+  qdrant2:
+    image: qdrant/qdrant:latest
+    container_name: qdrant_hybrid_rag_v2
+    ports:
+      - "6335:6333"
+      - "6336:6334"
+    volumes:
+      - qdrant_storage_v2:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage_v2:

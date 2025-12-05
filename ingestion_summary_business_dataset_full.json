@@ -1,0 +1,67 @@
+{
+  "collection_name": "business_dataset_full",
+  "total_files": 4,
+  "processed_files": 4,
+  "total_records": 1718,
+  "total_chunks": 96225,
+  "total_points": 96225,
+  "file_summaries": [
+    {
+      "source_file": "Data/new_cleaned_data.json",
+      "total_records": 600,
+      "total_chunks": 43193,
+      "points_created": 43193,
+      "collection_name": "business_dataset_full",
+      "embedding_model": "all-MiniLM-L6-v2",
+      "embedding_dimensions": 384,
+      "detected_fields": [
+        "WholeContent_1",
+        "WholeContent_2",
+        "Header_1",
+        "Description_2",
+        "Description_1",
+        "Description_6",
+        "Description_3",
+        "Description_4"
+      ]
+    },
+    {
+      "source_file": "Data/cleaned_Procurement Tactics.json",
+      "total_records": 598,
+      "total_chunks": 39265,
+      "points_created": 39265,
+      "collection_name": "business_dataset_full",
+      "embedding_model": "all-MiniLM-L6-v2",
+      "embedding_dimensions": 384,
+      "detected_fields": [
+        "text",
+        "source"
+      ]
+    },
+    {
+      "source_file": "Data/cleaned_ProcureAbility.json",
+      "total_records": 97,
+      "total_chunks": 1106,
+      "points_created": 1106,
+      "collection_name": "business_dataset_full",
+      "embedding_model": "all-MiniLM-L6-v2",
+      "embedding_dimensions": 384,
+      "detected_fields": [
+        "text"
+      ]
+    },
+    {
+      "source_file": "Data/cleaned_Glossary_Procurement Tactics(1).json",
+      "total_records": 423,
+      "total_chunks": 12661,
+      "points_created": 12661,
+      "collection_name": "business_dataset_full",
+      "embedding_model": "all-MiniLM-L6-v2",
+      "embedding_dimensions": 384,
+      "detected_fields": [
+        "text",
+        "source"
+      ]
+    }
+  ]
+}
