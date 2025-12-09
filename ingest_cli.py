@@ -13,7 +13,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from Ingest.unified_ingestor import UnifiedIngestor
 from Ingest.smart_chunker import SmartChunker
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
+CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -47,10 +52,10 @@ Supported file types:
     file_parser.add_argument('path', help='Path to file')
     file_parser.add_argument('--collection', '-c', default='chatbot',
                             help='Collection name (default: chatbot)')
-    file_parser.add_argument('--chunk-size', type=int, default=500,
-                            help='Max chunk size (default: 500)')
-    file_parser.add_argument('--chunk-overlap', type=int, default=50,
-                            help='Chunk overlap (default: 50)')
+    file_parser.add_argument('--chunk-size', type=int, default=None,
+                            help='Max chunk size (default: from .env)')
+    file_parser.add_argument('--chunk-overlap', type=int, default=None,
+                            help='Chunk overlap (default: from .env)')
     
     # Directory command
     dir_parser = subparsers.add_parser('directory', help='Ingest all files in a directory')
@@ -59,20 +64,20 @@ Supported file types:
                            help='Collection name (default: chatbot)')
     dir_parser.add_argument('--recursive', '-r', action='store_true',
                            help='Process subdirectories')
-    dir_parser.add_argument('--chunk-size', type=int, default=500,
-                           help='Max chunk size (default: 500)')
-    dir_parser.add_argument('--chunk-overlap', type=int, default=50,
-                           help='Chunk overlap (default: 50)')
+    dir_parser.add_argument('--chunk-size', type=int, default=None,
+                           help='Max chunk size (default: from .env)')
+    dir_parser.add_argument('--chunk-overlap', type=int, default=None,
+                           help='Chunk overlap (default: from .env)')
     
     # Preview command
     preview_parser = subparsers.add_parser('preview', help='Preview chunks without ingesting')
     preview_parser.add_argument('path', help='Path to file')
-    preview_parser.add_argument('--limit', '-l', type=int, default=10,
-                               help='Number of chunks to show (default: 10)')
-    preview_parser.add_argument('--chunk-size', type=int, default=500,
-                               help='Max chunk size (default: 500)')
-    preview_parser.add_argument('--chunk-overlap', type=int, default=50,
-                               help='Chunk overlap (default: 50)')
+    preview_parser.add_argument('--limit', '-l', type=int, default=None,
+                               help='Number of chunks to show (default: from .env)')
+    preview_parser.add_argument('--chunk-size', type=int, default=None,
+                               help='Max chunk size (default: from .env)')
+    preview_parser.add_argument('--chunk-overlap', type=int, default=None,
+                               help='Chunk overlap (default: from .env)')
     
     # Stats command
     stats_parser = subparsers.add_parser('stats', help='Show collection statistics')
@@ -229,6 +234,7 @@ def show_stats(args):
         print(f"\n❌ Error: {e}")
         sys.exit(1)
 
-
+#changes kiye hai
 if __name__ == "__main__":
     main()
+    
