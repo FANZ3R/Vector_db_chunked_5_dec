@@ -18,7 +18,7 @@ sys.path.insert(0, str(project_root))
 from Retreive.enhanced_hybrid_search import EnhancedHybridSearch
 
 # ========== CONFIG ==========
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = ""
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
