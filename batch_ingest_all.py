@@ -16,6 +16,13 @@ sys.path.insert(0, str(project_root))
 
 from Ingest.custom_json_ingest import FlexibleJSONIngestor
 from Config.qdrant_cfg import get_qdrant_client
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
+CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -67,8 +74,7 @@ def clear_collection(collection_name: str) -> bool:
         
         if collection_name in collection_names:
             logger.info(f"Deleting existing collection: {collection_name}")
-            client.delete_collection(collection_na# Use docker compose ps instead
-docker compose -f docker-compose-qdrant2.yml psme)
+            client.delete_collection(collection_name)# Use docker compo
             logger.info(f"Collection '{collection_name}' deleted successfully")
         else:
             logger.info(f"Collection '{collection_name}' doesn't exist yet")
@@ -106,8 +112,8 @@ def ingest_all_files(
     collection_name: str = "business_dataset_full",
     clear_existing: bool = False,
     max_records_per_file: int = None,
-    chunk_size: int = 500,
-    chunk_overlap: int = 50,
+    chunk_size: int = CHUNK_SIZE,
+    chunk_overlap: int = CHUNK_OVERLAP,
     auto_confirm: bool = False
 ):
     """

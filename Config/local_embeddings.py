@@ -27,7 +27,7 @@ class LocalEmbeddingModel:
             model_name: Name of sentence transformer model to use
         """
         if model_name is None:
-            model_name = os.getenv('LOCAL_EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+            model_name = os.getenv('LOCAL_EMBEDDING_MODEL', 'BAAI/bge-base-en-v1.5')
             
         self.model_name = model_name
         logger.info(f"Loading local embedding model: {model_name}")

@@ -15,11 +15,18 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import logging
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+load_dotenv()
+
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
+CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))
+
+logger.info(f"SmartChunker loaded with CHUNK_SIZE={CHUNK_SIZE}, CHUNK_OVERLAP={CHUNK_OVERLAP} from .env")
 
 @dataclass
 class Chunk:
@@ -49,7 +56,7 @@ class Chunk:
 class SubChunker:
     """Handles sub-chunking when content exceeds max size"""
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
     
@@ -109,22 +116,46 @@ class SubChunker:
             return overlap_region[space_idx + 1:]
         return overlap_region
     
+
     def _force_split(self, text: str) -> List[str]:
-        """Force split text that has no good break points"""
-        chunks = []
-        start = 0
+        """
+        FIXED: Force split text ensuring word boundaries
+        Never cuts words mid-character
+        """
+        if len(text) <= self.max_chunk_size:
+            return [text]
         
-        while start < len(text):
-            end = min(start + self.max_chunk_size, len(text))
+        chunks = []
+        words = text.split()
+        current_chunk_words = []
+        current_length = 0
+        
+        for word in words:
+            word_length = len(word) + 1  # +1 for space
             
-            # Try to find a space to break at
-            if end < len(text):
-                space_idx = text.rfind(' ', start, end)
-                if space_idx > start:
-                    end = space_idx + 1
-            
-            chunks.append(text[start:end].strip())
-            start = max(end - self.chunk_overlap, start + 1)
+            if current_length + word_length > self.max_chunk_size and current_chunk_words:
+                # Save current chunk
+                chunks.append(' '.join(current_chunk_words))
+                
+                # Calculate overlap in words
+                overlap_chars = 0
+                overlap_words = []
+                for w in reversed(current_chunk_words):
+                    if overlap_chars + len(w) + 1 > self.chunk_overlap:
+                        break
+                    overlap_words.insert(0, w)
+                    overlap_chars += len(w) + 1
+                
+                # Start new chunk with overlap
+                current_chunk_words = overlap_words + [word]
+                current_length = sum(len(w) + 1 for w in current_chunk_words)
+            else:
+                current_chunk_words.append(word)
+                current_length += word_length
+        
+        # Add remaining words
+        if current_chunk_words:
+            chunks.append(' '.join(current_chunk_words))
         
         return chunks
 
@@ -132,7 +163,7 @@ class SubChunker:
 class BaseChunker(ABC):
     """Abstract base class for file-specific chunkers"""
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.sub_chunker = SubChunker(max_chunk_size, chunk_overlap)
@@ -181,7 +212,7 @@ class ExcelChunker(BaseChunker):
     Each row represents a single product/article/record
     """
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         super().__init__(max_chunk_size, chunk_overlap)
         self._pandas = None
     
@@ -220,6 +251,7 @@ class ExcelChunker(BaseChunker):
         all_chunks = []
         columns = list(df.columns)
         
+
         for row_idx, row in df.iterrows():
             # Create content from all columns
             row_content = self._row_to_text(row, columns)
@@ -227,17 +259,16 @@ class ExcelChunker(BaseChunker):
             if not row_content or len(row_content.strip()) < 10:
                 continue
             
-            # Create metadata from row
-            # Extract header from common header columns
+            # Extract header (MODIFIED - no truncation)
             header_value = ""
             for col in ['name', 'Name', 'title', 'Title', 'header', 'Header', 'product_name', 'Header_1']:
                 if col in row and pd.notna(row[col]):
-                    header_value = str(row[col])[:200]
+                    header_value = str(row[col])[:100]  # Full header, no truncation
                     break
             if not header_value and len(columns) > 0:
                 first_val = row.get(columns[0])
                 if pd.notna(first_val):
-                    header_value = str(first_val)[:200]
+                    header_value = str(first_val)[:100]  # Full header, no truncation
             
             metadata = {
                 'row_index': int(row_idx),
@@ -245,10 +276,10 @@ class ExcelChunker(BaseChunker):
                 'row_data': {col: str(val) if pd.notna(val) else None 
                             for col, val in row.items()},
                 'header': header_value,
-                'content_type': 'product'  # Default for Excel
+                'content_type': 'product'
             }
             
-            # Apply sub-chunking if needed
+            # Apply sub-chunking
             chunks = self._apply_sub_chunking(
                 content=row_content,
                 base_metadata=metadata,
@@ -256,7 +287,22 @@ class ExcelChunker(BaseChunker):
                 primary_index=int(row_idx)
             )
             
-            all_chunks.extend(chunks)
+            # ======== ADD THIS NEW CODE ========
+            # Filter tiny chunks and add headers
+            filtered_chunks = []
+            for chunk in chunks:
+                # Skip tiny chunks
+                if len(chunk.content.strip()) < 100:
+                    continue
+                
+                # PREPEND HEADER to text
+                if header_value:
+                    chunk.content = f"{header_value}\n\n{chunk.content}"
+                
+                filtered_chunks.append(chunk)
+            
+            all_chunks.extend(filtered_chunks)
+        
         
         logger.info(f"Created {len(all_chunks)} chunks from {len(df)} rows")
         return all_chunks
@@ -281,7 +327,7 @@ class PDFChunker(BaseChunker):
     Each paragraph represents related content
     """
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         super().__init__(max_chunk_size, chunk_overlap)
     
     def get_file_type(self) -> str:
@@ -402,7 +448,7 @@ class JSONChunker(BaseChunker):
     Each JSON object/block represents a complete entity
     """
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         super().__init__(max_chunk_size, chunk_overlap)
         
         # Fields to prioritize for content
@@ -450,6 +496,7 @@ class JSONChunker(BaseChunker):
         
         all_chunks = []
         
+        
         for block_idx, block in enumerate(blocks):
             if not isinstance(block, dict):
                 continue
@@ -463,7 +510,7 @@ class JSONChunker(BaseChunker):
             # Create metadata
             metadata = self._extract_block_metadata(block, block_idx, len(blocks))
             
-            # Apply sub-chunking if needed
+            # Apply sub-chunking
             chunks = self._apply_sub_chunking(
                 content=block_content,
                 base_metadata=metadata,
@@ -471,23 +518,41 @@ class JSONChunker(BaseChunker):
                 primary_index=block_idx
             )
             
-            all_chunks.extend(chunks)
+            # ======== ADD THIS NEW CODE ========
+            # Filter tiny chunks and add headers
+            header = metadata.get('header', '')
+            filtered_chunks = []
+            
+            for chunk in chunks:
+                # Skip tiny chunks
+                if len(chunk.content.strip()) < 100:
+                    continue
+                
+                # PREPEND HEADER to text
+                if header:
+                    chunk.content = f"{header}\n\n{chunk.content}"
+                
+                filtered_chunks.append(chunk)
+            
+            all_chunks.extend(filtered_chunks)
         
         logger.info(f"Created {len(all_chunks)} chunks from {len(blocks)} blocks")
         return all_chunks
     
+    
     def _block_to_text(self, block: Dict[str, Any]) -> str:
-        """Convert a JSON block to searchable text"""
+        """Convert a JSON block to searchable text - FIXED"""
         parts = []
         
-        # First, add content from priority fields
+        # First, add content from priority fields (NO FIELD NAMES!)
         for field in self.content_fields:
             if field in block and block[field]:
                 value = str(block[field]).strip()
                 if value and len(value) > 5:
-                    parts.append(f"{field}: {value}")
+                    # FIXED: Just append value, NO "field: value" format
+                    parts.append(value)
         
-        # Then add other fields
+        # Then add other fields (NO FIELD NAMES!)
         for key, value in block.items():
             if key in self.content_fields:
                 continue  # Already added
@@ -495,9 +560,11 @@ class JSONChunker(BaseChunker):
             if value and not isinstance(value, (dict, list)):
                 str_value = str(value).strip()
                 if str_value and len(str_value) > 3:
-                    parts.append(f"{key}: {str_value}")
+                    # FIXED: Just append value, NO "key: value" format
+                    parts.append(str_value)
         
-        return "\n".join(parts)
+        # Use double newline as separator for better readability
+        return "\n\n".join(parts)
     
     def _extract_block_metadata(
         self, 
@@ -518,7 +585,7 @@ class JSONChunker(BaseChunker):
         # Extract header/title if available
         for field in ['Header_1', 'title', 'name', 'header', 'Title', 'Name']:
             if field in block and block[field]:
-                metadata['header'] = str(block[field])[:200]
+                metadata['header'] = str(block[field])[:100]
                 metadata['primary_field'] = field
                 break
         
@@ -543,7 +610,7 @@ class SmartChunker:
     based on file type
     """
     
-    def __init__(self, max_chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, max_chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         
@@ -641,7 +708,7 @@ def test_smart_chunker():
     print("Testing Smart Chunker")
     print("=" * 60)
     
-    chunker = SmartChunker(max_chunk_size=500, chunk_overlap=50)
+    chunker = SmartChunker(max_chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
     
     print(f"\nSupported extensions: {chunker.get_supported_extensions()}")
     

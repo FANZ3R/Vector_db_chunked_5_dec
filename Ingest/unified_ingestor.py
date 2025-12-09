@@ -35,6 +35,10 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
+CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))
+
+logger.info(f"UnifiedIngestor loaded with CHUNK_SIZE={CHUNK_SIZE}, CHUNK_OVERLAP={CHUNK_OVERLAP} from .env")
 
 class UnifiedIngestor:
     """
@@ -60,8 +64,8 @@ class UnifiedIngestor:
         """
         # Load from environment with defaults
         self.collection_name = collection_name or os.getenv('DEFAULT_COLLECTION_NAME', 'business_dataset')
-        self.max_chunk_size = max_chunk_size or int(os.getenv('CHUNK_SIZE', 500))
-        self.chunk_overlap = chunk_overlap or int(os.getenv('CHUNK_OVERLAP', 50))
+        self.max_chunk_size = max_chunk_size or CHUNK_SIZE
+        self.chunk_overlap = chunk_overlap or CHUNK_OVERLAP
         self.batch_size = int(os.getenv('BATCH_SIZE', 32))
         
         # Initialize components
@@ -495,8 +499,8 @@ def test_unified_ingestor():
         # Initialize ingestor
         ingestor = UnifiedIngestor(
             collection_name="test_unified_ingest",
-            max_chunk_size=500,
-            chunk_overlap=50
+            max_chunk_size=None,
+            chunk_overlap=None
         )
         
         # Test single file ingestion

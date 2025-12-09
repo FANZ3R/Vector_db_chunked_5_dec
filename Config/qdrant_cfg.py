@@ -49,7 +49,7 @@ class QdrantConfig:
     def ensure_collection_exists(
         self, 
         collection_name: str, 
-        vector_size: int = 384,
+        vector_size: int = None,
         distance: Distance = Distance.COSINE
     ) -> bool:
         """
@@ -63,6 +63,10 @@ class QdrantConfig:
         Returns:
             True if collection exists or was created successfully
         """
+        
+        if vector_size is None:
+            vector_size = int(os.getenv('EMBEDDING_DIMENSION', 768))
+            
         try:
             client = self.get_client()
             
@@ -140,13 +144,16 @@ def get_qdrant_client() -> QdrantClient:
 
 def ensure_collection_exists(
     collection_name: str, 
-    vector_size: int = 384
+    vector_size: int = None
 ) -> bool:
     """Convenience function to ensure collection exists"""
     global _qdrant_config
     
     if _qdrant_config is None:
         _qdrant_config = QdrantConfig()
+        
+    if vector_size is None:
+        vector_size = int(os.getenv('EMBEDDING_DIMENSION', 768))
     
     return _qdrant_config.ensure_collection_exists(collection_name, vector_size)
 

@@ -45,8 +45,8 @@ Supported file types:
     # File command
     file_parser = subparsers.add_parser('file', help='Ingest a single file')
     file_parser.add_argument('path', help='Path to file')
-    file_parser.add_argument('--collection', '-c', default='business_dataset',
-                            help='Collection name (default: business_dataset)')
+    file_parser.add_argument('--collection', '-c', default='chatbot',
+                            help='Collection name (default: chatbot)')
     file_parser.add_argument('--chunk-size', type=int, default=500,
                             help='Max chunk size (default: 500)')
     file_parser.add_argument('--chunk-overlap', type=int, default=50,
@@ -55,8 +55,8 @@ Supported file types:
     # Directory command
     dir_parser = subparsers.add_parser('directory', help='Ingest all files in a directory')
     dir_parser.add_argument('path', help='Path to directory')
-    dir_parser.add_argument('--collection', '-c', default='business_dataset',
-                           help='Collection name (default: business_dataset)')
+    dir_parser.add_argument('--collection', '-c', default='chatbot',
+                           help='Collection name (default: chatbot)')
     dir_parser.add_argument('--recursive', '-r', action='store_true',
                            help='Process subdirectories')
     dir_parser.add_argument('--chunk-size', type=int, default=500,
@@ -76,8 +76,8 @@ Supported file types:
     
     # Stats command
     stats_parser = subparsers.add_parser('stats', help='Show collection statistics')
-    stats_parser.add_argument('--collection', '-c', default='business_dataset',
-                             help='Collection name (default: business_dataset)')
+    stats_parser.add_argument('--collection', '-c', default='chatbot',
+                             help='Collection name (default: chatbot)')
     
     args = parser.parse_args()
     
