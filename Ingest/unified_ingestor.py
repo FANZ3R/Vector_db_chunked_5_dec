@@ -30,7 +30,10 @@ from Ingest.smart_chunker import SmartChunker, Chunk
 from qdrant_client.models import PointStruct
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent.parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

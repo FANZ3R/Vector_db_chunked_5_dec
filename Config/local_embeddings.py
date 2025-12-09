@@ -4,13 +4,16 @@ Provides cost-effective alternative to API-based embeddings
 """
 
 import os
+from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from typing import List, Union
 import logging
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent.parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

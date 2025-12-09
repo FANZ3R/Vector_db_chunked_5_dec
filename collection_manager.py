@@ -13,6 +13,7 @@ import logging
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -23,7 +24,10 @@ from qdrant_client.models import (
     TokenizerType
 )
 
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -340,6 +344,7 @@ import logging
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -350,7 +355,10 @@ from qdrant_client.models import (
     TokenizerType
 )
 
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

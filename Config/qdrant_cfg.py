@@ -4,13 +4,16 @@ Handles connection, collection management, and basic operations
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, CollectionStatus
 import logging
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent.parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

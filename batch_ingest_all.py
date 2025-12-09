@@ -18,8 +18,12 @@ from Ingest.custom_json_ingest import FlexibleJSONIngestor
 from Config.qdrant_cfg import get_qdrant_client
 
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load environment variables from project root
+project_root = Path(__file__).parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
 CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))

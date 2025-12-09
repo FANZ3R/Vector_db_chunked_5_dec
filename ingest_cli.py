@@ -11,11 +11,16 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+from pathlib import Path
 from Ingest.unified_ingestor import UnifiedIngestor
 from Ingest.smart_chunker import SmartChunker
 import os
 from dotenv import load_dotenv
-load_dotenv()
+
+# Load environment variables from project root
+project_root = Path(__file__).parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', 1500))
 CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', 300))
