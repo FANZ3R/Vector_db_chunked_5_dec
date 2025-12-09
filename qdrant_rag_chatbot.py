@@ -17,7 +17,7 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 from collections import defaultdict
 
 # ========== CONFIG ==========
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = ""
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
